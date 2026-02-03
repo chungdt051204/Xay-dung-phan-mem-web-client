@@ -1,24 +1,19 @@
-import { Link } from "react-router-dom";
 import { useContext } from "react";
 import AppContext from "./AppContext";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 export default function HomeUser() {
   const { isLogin, me } = useContext(AppContext);
   return (
     <>
-      {isLogin && me ? (
-        <div>
-          <p>Xin chào {me?.username}</p>
-          <button>Đăng xuất</button>
-        </div>
+      <Navbar />
+      {isLogin && me !== null ? (
+        <p>Xin chào {me.username}</p>
       ) : (
-        <div>
-          <h2>Bạn chưa đăng nhập</h2>
-          <Link to="/login">
-            <button>Đăng nhập</button>
-          </Link>
-        </div>
+        <p>Bạn chưa đăng nhập</p>
       )}
+      <Footer />
     </>
   );
 }

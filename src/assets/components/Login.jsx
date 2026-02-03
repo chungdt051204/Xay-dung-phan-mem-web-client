@@ -2,6 +2,9 @@ import { useRef, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AppContext from "./AppContext";
 import { api } from "../../App";
+import { Link } from "react-router-dom";
+import "../style/Auth.css";
+import LoginGoogle from "./LoginGoogle";
 
 export default function Login() {
   const { setRefresh, setIsLogin, setMe } = useContext(AppContext);
@@ -40,7 +43,7 @@ export default function Login() {
   };
   return (
     <>
-      <form onSubmit={handleSubmit}>
+      <form className="form" onSubmit={handleSubmit}>
         <input
           type="text"
           ref={input}
@@ -61,6 +64,10 @@ export default function Login() {
         <br />
         <button>Đăng nhập</button>
       </form>
+      <Link to="/register">
+        <p>Chua co tai khoan dang ky ngay</p>
+      </Link>
+      <LoginGoogle />
     </>
   );
 }
