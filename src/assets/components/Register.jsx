@@ -1,33 +1,75 @@
 import "../style/Auth.css";
+import { Link } from "react-router-dom";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 export default function Register() {
   return (
     <>
-      <form>
-        <h2>Đăng Ký</h2>
-        <label htmlFor="">Họ và tên: </label> <input type="text" />
-        <br />
-        <label htmlFor="">Tên đăng nhập: </label> <input type="text" />
-        <br />
-        <label htmlFor="">Email: </label> <input type="text" />
-        <br />
-        <label htmlFor="">Mật khẩu: </label>{" "}
-        <input type="password" name="" id="" />
-        <br />
-        <label htmlFor="">SĐT:</label> <input type="text" />
-        <br />
-        <form action="">
-          Giới tính:
-          <input type="radio" />
-          Nam
-          <input type="radio" />
-          Nữ
-        </form>
-        <br />
-        <label htmlFor="">Ngày sinh: </label>
-        <input type="date" name="" id="" />
-        <br />
-      </form>
+      <Navbar />
+      <div className="auth-wrapper">
+        <div className="auth-card">
+          <h2>ĐĂNG KÝ</h2>
+          <form className="auth-form">
+            <div className="form-row">
+              <div className="form-group floating">
+                <input type="text" placeholder=" " required />
+                <label>Họ và tên</label>
+              </div>
+
+              <div className="form-group floating">
+                <input type="text" placeholder=" " required />
+                <label>Tên đăng nhập</label>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group floating">
+                <input type="email" placeholder=" " required />
+                <label>Email</label>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group floating">
+                <input type="password" placeholder=" " required />
+                <label>Mật khẩu</label>
+              </div>
+
+              <div className="form-group floating">
+                <input type="password" placeholder=" " required />
+                <label>Nhập lại mật khẩu</label>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group floating">
+                <input type="text" placeholder=" " required />
+                <label>Số điện thoại</label>
+              </div>
+              <div className="form-group floating">
+                <input type="date" required />
+                <label>Ngày sinh</label>
+              </div>
+            </div>
+            <div className="gender">
+              <span>Giới tính:</span>
+              <label>
+                <input type="radio" name="gender" /> Nam
+              </label>
+              <label>
+                <input type="radio" name="gender" /> Nữ
+              </label>
+            </div>
+            <div className="form-group">
+              <label>Ảnh đại diện</label>
+              <input type="file" accept="image/*" />
+            </div>
+            <button className="btn-primary">Hoàn tất đăng ký</button>
+            <Link to="/login" className="auth-link">
+              ← Quay lại đăng nhập
+            </Link>
+          </form>
+        </div>
+      </div>
+      <Footer />
     </>
   );
 }
