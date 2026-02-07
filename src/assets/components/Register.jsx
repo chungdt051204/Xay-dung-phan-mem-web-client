@@ -1,36 +1,81 @@
-import "../style/Auth.css";
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { api } from "../../App";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import { useRef, useState } from "react";
-import { api } from "../../App";
+import "../style/Auth.css";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [fullname, setFullname] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [gender, setGender] = useState("");
-  const avatar = useRef();
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append("fullname", fullname);
-    formData.append("username", username);
-    formData.append("email", email);
-    formData.append("password", password);
-    formData.append("confirmPassword", confirmPassword);
-    formData.append("phone", phone);
-    formData.append("dateOfBirth", dateOfBirth);
-    formData.append("gender", gender);
-    formData.append("avatar", avatar.current.files[0]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const phoneRegex = /^0\d{9}$/;
+  const registerSchema = z
+    .object({
+      fullname: z.string().trim().min(1, "Họ tên không được bỏ trống"),
+      username: z
+        .string()
+        .trim()
+        .min(1, "Tên đăng nhập phải có tối thiểu 5 ký tự"),
+      email: z.email("Email không đúng định dạng"),
+      password: z.string().trim().min(8, "Mật khẩu phải có ít nhất 8 ký tự"),
+      confirmPassword: z.string(),
+      phone: z
+        .string()
+        .min(1, "Vui lòng nhập số điện thoại")
+        .regex(phoneRegex, "Số điện thoại không hợp lệ"),
+      dateOfBirth: z.coerce.date("Vui lòng chọn ngày sinh hợp lệ"),
+      gender: z
+        .enum(["nam", "nữ", "chưa chọn"])
+        .optional()
+        .default("chưa chọn"),
+      avatar: z
+        .any()
+        .refine((files) => files?.length > 0, "Vui lòng chọn file"),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: "Mật khẩu không khớp",
+      path: ["confirmPassword"],
+    });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullname: "",
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      phone: "",
+      dateOfBirth: "",
+      gender: "chưa chọn",
+    },
+    mode: "onTouched",
+  });
+
+  const onSubmit = (data) => {
+    setLoading(true);
+    const dataToSend = new FormData();
+    dataToSend.append("fullname", data.fullname);
+    dataToSend.append("username", data.username);
+    dataToSend.append("email", data.email);
+    dataToSend.append("password", data.password);
+    dataToSend.append("confirmPassword", data.confirmPassword);
+    dataToSend.append("phone", data.phone);
+    dataToSend.append("dateOfBirth", data.dateOfBirth);
+    dataToSend.append("gender", data.gender);
+    dataToSend.append("avatar", data.avatar[0]);
+    localStorage.setItem("resetEmail", data.email);
+    localStorage.setItem("method", "register");
     fetch(`${api}/register`, {
       method: "POST",
-      body: formData,
+      body: dataToSend,
     })
       .then((res) => {
         if (res.ok) return res.json();
@@ -38,120 +83,98 @@ export default function Register() {
       })
       .then(({ message }) => {
         alert(message);
-        navigate("/login");
+        navigate("/confirm");
       })
       .catch(async (err) => {
-        const { message } = await err.json();
-        console.log(message);
+        if (err.status === 409) {
+          const { message } = await err.json();
+          setError(message);
+        }
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
+
   return (
     <>
       <Navbar />
       <div className="auth-wrapper">
         <div className="auth-card">
           <h2>ĐĂNG KÝ</h2>
-          <form className="auth-form" onSubmit={handleSubmit}>
+          <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
             <div className="form-row">
               <div className="form-group floating">
-                <input
-                  value={fullname}
-                  onChange={(e) => setFullname(e.target.value)}
-                  type="text"
-                  required
-                />
+                <input {...register("fullname")} type="text" />
                 <label>Họ và tên</label>
+                <strong>{errors?.fullname?.message}</strong>
               </div>
 
               <div className="form-group floating">
-                <input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  type="text"
-                  required
-                />
+                <input {...register("username")} type="text" />
                 <label>Tên đăng nhập</label>
+                <strong>{errors?.username?.message}</strong>
               </div>
             </div>
             <div className="form-row">
               <div className="form-group floating">
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  required
-                />
+                <input {...register("email")} type="text" />
                 <label>Email</label>
+                <strong>{error ? error : ""}</strong>
+                <strong>{errors?.email?.message}</strong>
               </div>
             </div>
             <div className="form-row">
               <div className="form-group floating">
-                <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  type="password"
-                  required
-                />
+                <input {...register("password")} type="password" />
                 <label>Mật khẩu</label>
+                <strong>{errors?.password?.message}</strong>
               </div>
 
               <div className="form-group floating">
-                <input
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  type="password"
-                  required
-                />
+                <input {...register("confirmPassword")} type="password" />
                 <label>Nhập lại mật khẩu</label>
+                <strong>{errors?.confirmPassword?.message}</strong>
               </div>
             </div>
             <div className="form-row">
               <div className="form-group floating">
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  type="text"
-                  required
-                />
+                <input {...register("phone")} type="text" />
                 <label>Số điện thoại</label>
+                <strong>{errors?.phone?.message}</strong>
               </div>
+
               <div className="form-group floating">
-                <input
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                  type="date"
-                  required
-                />
+                <input {...register("dateOfBirth")} type="date" />
                 <label>Ngày sinh</label>
+                <strong>{errors?.dateOfBirth?.message}</strong>
               </div>
             </div>
             <div className="gender">
               <span>Giới tính:</span>
               <label>
-                <input
-                  checked={gender === "nam"}
-                  value="nam"
-                  onChange={(e) => setGender(e.target.value)}
-                  type="radio"
-                />
+                <input {...register("gender")} type="radio" value="nam" />
                 Nam
               </label>
               <label>
-                <input
-                  checked={gender === "nữ"}
-                  value="nữ"
-                  onChange={(e) => setGender(e.target.value)}
-                  type="radio"
-                  name="gender"
-                />
+                <input {...register("gender")} type="radio" value="nữ" />
                 Nữ
               </label>
             </div>
             <div className="form-group">
               <label>Ảnh đại diện</label>
-              <input ref={avatar} type="file" name="avatar" accept="image/*" />
+              <input
+                {...register("avatar")}
+                type="file"
+                name="avatar"
+                accept="image/*"
+              />
             </div>
-            <button className="btn-primary">Hoàn tất đăng ký</button>
+            <strong>{errors?.avatar?.message}</strong>
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? "Đang xử lý..." : "Hoàn tất đăng ký"}
+            </button>
+
             <Link to="/login" className="auth-link">
               ← Quay lại đăng nhập
             </Link>
