@@ -25,6 +25,9 @@ function App() {
   const [me, setMe] = useState(null);
   const isAdmin = !isLoading && isLogin && me?.roles === "admin";
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -59,6 +62,9 @@ function App() {
   }, [refresh, isLoading, searchParams, setSearchParams]);
   useEffect(() => {
     fetchApi({ url: `${api}/product`, setData: setProducts });
+    fetchApi({ url: `${api}/category`, setData: setCategories });
+    fetchApi({ url: `${api}/brand`, setData: setBrands });
+    fetchApi({ url: `${api}/user`, setData: setUsers });
   }, [refresh]);
 
   return (
@@ -73,6 +79,10 @@ function App() {
         setMe,
         isAdmin,
         products,
+        categories,
+        brands,
+        users,
+        setUsers,
       }}
     >
       <Routes>

@@ -5,8 +5,6 @@ import { toast } from "react-toastify";
 import { api } from "../../App";
 import "../style/Auth.css";
 import LoginGoogle from "../components/LoginGoogle";
-import Navbar from "../components/UserNavbar";
-import Footer from "../components/Footer";
 
 export default function Login() {
   const { setRefresh, setIsLogin, setMe } = useContext(AppContext);
@@ -37,7 +35,7 @@ export default function Login() {
         setMe(data);
         toast.success(message);
         setTimeout(() => {
-          data.roles === "admin" ? navigate("/admin") : navigate("/");
+          navigate("/");
         }, 1000);
         setRefresh((p) => p + 1);
       })
@@ -49,7 +47,6 @@ export default function Login() {
 
   return (
     <>
-      <Navbar />
       <div className="auth-wrapper">
         <div className="auth-card auth-card--login">
           <h2>ĐĂNG NHẬP</h2>
@@ -57,12 +54,17 @@ export default function Login() {
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Tên đăng nhập / Email</label>
-              <input ref={input} required />
+              <input ref={input} required autoComplete="off" />
             </div>
 
             <div className="form-group">
               <label>Mật khẩu</label>
-              <input type="password" ref={password} required />
+              <input
+                type="password"
+                ref={password}
+                required
+                autoComplete="new-password"
+              />
             </div>
 
             {err && <p className="error">{err}</p>}
@@ -81,7 +83,6 @@ export default function Login() {
           </form>
         </div>
       </div>
-      <Footer />
     </>
   );
 }
