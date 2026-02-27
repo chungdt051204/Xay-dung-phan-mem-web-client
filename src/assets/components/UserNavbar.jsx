@@ -73,7 +73,16 @@ export default function UserNavbar() {
       </div>
 
       <div className="navbar-right">
-        <div className="navbar-item">
+        <div
+          onClick={() => {
+            if (!isLogin) {
+              toast.warning("Bạn chưa đăng nhập");
+              return;
+            }
+            navigate("/cart");
+          }}
+          className="navbar-item cart-link"
+        >
           <i className="fa-solid fa-cart-shopping"></i>
           <span>Giỏ hàng</span>
         </div>
