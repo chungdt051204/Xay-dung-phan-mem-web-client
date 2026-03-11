@@ -1,4 +1,5 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import AppContext from "../components/AppContext";
 import Navbar from "../components/UserNavbar";
 import Footer from "../components/Footer";
@@ -8,6 +9,32 @@ import User from "../components/User";
 
 export default function HomeUser() {
   const { products } = useContext(AppContext);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const category = searchParams.get("category");
+    if (category) {
+      setTimeout(() => {
+        const categoryMap = {
+          phone: "Điện thoại",
+          laptop: "Laptop",
+          tablet: "Máy tính bảng",
+          headphone: "Headphone",
+          tivi: "Tivi",
+          phukien: "Phụ kiện",
+        };
+        const categoryName = categoryMap[category];
+        if (categoryName) {
+          const element = document.getElementById(
+            categoryName.replace(/\s+/g, "-").toLowerCase()
+          );
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth" });
+          }
+        }
+      }, 300);
+    }
+  }, [searchParams]);
   const phones = products?.docs?.filter(
     (value) => value.categoryId.categoryName === "Điện thoại"
   );
@@ -27,17 +54,19 @@ export default function HomeUser() {
   return (
     <>
       <Navbar />
-      <User />
+      <Link to="/users">
+        <a>Bấm vào đây để test chủ đề 2</a>
+      </Link>
       <Banner />
-      <h2>Điện thoại</h2>
+      <h2 id="điện-thoại">Điện thoại</h2>
       <ProductCategoryCard data={phones} />
-      <h2>Laptop</h2>
+      <h2 id="laptop">Laptop</h2>
       <ProductCategoryCard data={laptops} />
-      <h2>Máy tính bảng</h2>
+      <h2 id="máy-tính-bảng">Máy tính bảng</h2>
       <ProductCategoryCard data={ipads} />
-      <h2>Headphone</h2>
+      <h2 id="headphone">Headphone</h2>
       <ProductCategoryCard data={headphones} />
-      <h2>Tivi</h2>
+      <h2 id="tivi">Tivi</h2>
       <ProductCategoryCard data={televisions} />
       <Footer />
     </>

@@ -19,6 +19,15 @@ import fetchApi from "./service/api";
 import AccessDeniedPage from "./assets/pages/AccessDeniedPage";
 import MyOrder from "./assets/pages/MyOrder";
 import MyOrderDetail from "./assets/pages/MyOrderDetail";
+import About from "./assets/pages/About";
+import Blogs from "./assets/pages/Blogs";
+import Contact from "./assets/pages/Contact";
+import FAQ from "./assets/pages/FAQ";
+import Account from "./assets/pages/Account";
+import Checkout from "./assets/pages/Checkout";
+import Wishlist from "./assets/pages/Wishlist";
+import Orders from "./assets/pages/Orders";
+import User from "./assets/components/User";
 
 export const api = "https://xay-dung-phan-mem-web-server.onrender.com";
 
@@ -69,7 +78,7 @@ function App() {
     fetchApi({ url: `${api}/product`, setData: setProducts });
   }, [refresh]);
   useEffect(() => {
-    fetchApi({ url: `${api}/brand`, setData: setBrands });
+    fetchApi({ url: `${api}/brand?_limit=10`, setData: setBrands });
   }, [refresh]);
   useEffect(() => {
     fetchApi({ url: `${api}/category`, setData: setCategories });
@@ -91,6 +100,7 @@ function App() {
         isAdmin,
         products,
         brands,
+        setBrands,
         categories,
         users,
         setUsers,
@@ -98,6 +108,7 @@ function App() {
     >
       <Routes>
         {/* Routes cho phía User */}
+        <Route path="/users" element={<User />} />
         <Route path="/" element={<HomeUser />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -108,6 +119,15 @@ function App() {
         <Route path="/my-orders" element={<MyOrder />} />
         <Route path="/my-orders/detail" element={<MyOrderDetail />} />
         <Route path="/access-denied" element={<AccessDeniedPage />} />
+        {/* Quick Links & Account Routes */}
+        <Route path="/about" element={<About />} />
+        <Route path="/blogs" element={<Blogs />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/account" element={<Account />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/orders" element={<Orders />} />
         {/* Routes cho phía Admin  */}
         <Route path="/admin" element={<HomeAdmin />}>
           <Route path="brands" element={<BrandManager />} />{" "}
