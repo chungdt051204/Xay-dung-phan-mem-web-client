@@ -28,6 +28,8 @@ import Checkout from "./assets/pages/Checkout";
 import Wishlist from "./assets/pages/Wishlist";
 import Orders from "./assets/pages/Orders";
 import User from "./assets/pages/User";
+import ChatBot from "./assets/components/ChatBot";
+import MyProfile from "./assets/pages/MyProfile";
 
 export const api = "https://xay-dung-phan-mem-web-server.onrender.com";
 
@@ -42,6 +44,7 @@ function App() {
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
   const [users, setUsers] = useState([]);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -62,8 +65,8 @@ function App() {
         if (res.ok) return res.json();
         throw res;
       })
-      .then(({ data }) => {
-        setMe(data);
+      .then(({ result }) => {
+        setMe(result);
         setIsLogin(true);
       })
       .finally(() => {
@@ -84,7 +87,7 @@ function App() {
     fetchApi({ url: `${api}/category`, setData: setCategories });
   }, [refresh]);
   useEffect(() => {
-    fetchApi({ url: `${api}/user`, setData: setUsers });
+    fetchApi({ url: `${api}/user?_limit=5`, setData: setUsers });
   }, [refresh]);
 
   return (
@@ -104,18 +107,28 @@ function App() {
         categories,
         users,
         setUsers,
+        token,
       }}
     >
       <Routes>
         {/* Routes cho phía User */}
         <Route path="/users" element={<User />} />
-        <Route path="/" element={<HomeUser />} />
+        <Route
+          path="/"
+          element={
+            <>
+              <HomeUser />
+              <ChatBot />
+            </>
+          }
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/password" element={<Password />} />
         <Route path="/confirm" element={<Confirm />} />
         <Route path="product/detail" element={<DetailProduct />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/my-profile" element={<MyProfile />} />
         <Route path="/my-orders" element={<MyOrder />} />
         <Route path="/my-orders/detail" element={<MyOrderDetail />} />
         <Route path="/access-denied" element={<AccessDeniedPage />} />

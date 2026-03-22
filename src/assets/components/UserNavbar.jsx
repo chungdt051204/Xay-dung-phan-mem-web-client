@@ -126,7 +126,9 @@ export default function UserNavbar() {
             <img
               src={me.avatar}
               alt="avatar"
-              className="user-avatar"
+              style={{ borderRadius: "50%" }}
+              width={50}
+              height={50}
               referrerPolicy="no-referrer"
               onClick={() => setOpenUserMenu((prev) => !prev)}
             />
@@ -134,7 +136,7 @@ export default function UserNavbar() {
             {openUserMenu && (
               <ul className="user-dropdown">
                 <li>
-                  <Link to="/profile" onClick={() => setOpenUserMenu(false)}>
+                  <Link to="/my-profile" onClick={() => setOpenUserMenu(false)}>
                     <i className="fa-regular fa-user"></i> Thông tin cá nhân
                   </Link>
                 </li>
