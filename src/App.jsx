@@ -25,11 +25,11 @@ import Contact from "./assets/pages/Contact";
 import FAQ from "./assets/pages/FAQ";
 import Account from "./assets/pages/Account";
 import Checkout from "./assets/pages/Checkout";
-import Wishlist from "./assets/pages/Wishlist";
-import Orders from "./assets/pages/Orders";
+
 import User from "./assets/pages/User";
 import ChatBot from "./assets/components/ChatBot";
 import MyProfile from "./assets/pages/MyProfile";
+import Dashboard from "./assets/pages/Dashboard";
 
 export const api = "https://xay-dung-phan-mem-web-server.onrender.com";
 
@@ -44,6 +44,7 @@ function App() {
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
   const [users, setUsers] = useState([]);
+  const [orders, setOrders] = useState([]);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -87,7 +88,10 @@ function App() {
     fetchApi({ url: `${api}/category`, setData: setCategories });
   }, [refresh]);
   useEffect(() => {
-    fetchApi({ url: `${api}/user?_limit=5`, setData: setUsers });
+    fetchApi({ url: `${api}/user`, setData: setUsers });
+  }, [refresh]);
+  useEffect(() => {
+    fetchApi({ url: `${api}/order`, setData: setOrders });
   }, [refresh]);
 
   return (
@@ -107,6 +111,8 @@ function App() {
         categories,
         users,
         setUsers,
+        orders,
+        setOrders,
         token,
       }}
     >
@@ -139,18 +145,22 @@ function App() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/account" element={<Account />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/orders" element={<Orders />} />
+
         {/* Routes cho phía Admin  */}
         <Route path="/admin" element={<HomeAdmin />}>
-          <Route path="brands" element={<BrandManager />} />{" "}
+          <Route path="" element={<Dashboard />} />
+          <Route path="brands" element={<BrandManager />} />
           <Route path="categories" element={<CategoryManager />} />
           <Route path="products" element={<ProductManager />} />
           <Route path="users" element={<UserManager />} />
           <Route path="orders" element={<OrderManager />} />
         </Route>
       </Routes>
-      <ToastContainer position="top-center" autoClose={1000} />
+      <ToastContainer
+        position="top-center"
+        autoClose={1000}
+        style={{ zIndex: 9999 }}
+      />
     </AppContext.Provider>
   );
 }

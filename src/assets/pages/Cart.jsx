@@ -62,7 +62,8 @@ export default function Cart() {
 
   useEffect(() => {
     setSelectedItems(
-      myCart?.items.filter((value) => itemIdsSelected.includes(value._id)) || []
+      myCart?.items.filter((value) => itemIdsSelected.includes(value._id)) ||
+        [],
     );
   }, [itemIdsSelected, myCart]);
 
@@ -106,6 +107,14 @@ export default function Cart() {
     }
   };
   const handleIncreaseQuantity = (item) => {
+    // Kiểm tra số lượng tồn kho
+    if (item.quantity >= item.productId.quantityStock) {
+      toast.warning(
+        `Sản phẩm "${item.productId.productName}" chỉ còn ${item.productId.quantityStock} cái`,
+      );
+      return;
+    }
+
     fetch(`${api}/cart?userId=${me?._id}&action=increase`, {
       method: "PUT",
       headers: {
@@ -184,9 +193,9 @@ export default function Cart() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify({
-        userId: me?._id,
         fullname: fullname,
         address: address,
         phone: phone,
@@ -199,14 +208,24 @@ export default function Cart() {
         if (res.ok) return res.json();
         throw res;
       })
-      .then(({ message }) => {
-        toast.success(message);
-        formDialog.current.close();
-        setRefresh((prev) => prev + 1);
+      .then(({ message, url }) => {
+        if (paymentMethod === "cod") {
+          toast.success(message);
+          formDialog.current.close();
+          setRefresh((prev) => prev + 1);
+        }
+        if (paymentMethod === "online") {
+          console.log(url);
+          window.location.href = url;
+        }
       })
       .catch(async (err) => {
-        const { message } = await err.json();
-        console.log(message);
+        formDialog.current.close();
+        if (err.status === 404 || err.status === 400) {
+          const { message } = await err.json();
+          toast.error(message);
+        }
+        console.log("Lỗi hệ thống");
       });
   };
   return (
@@ -252,6 +271,15 @@ export default function Cart() {
                       <button onClick={() => handleIncreaseQuantity(item)}>
                         +
                       </button>
+                      <span
+                        style={{
+                          marginLeft: "10px",
+                          fontSize: "12px",
+                          color: "#888",
+                        }}
+                      >
+                        (Còn: {item.productId.quantityStock})
+                      </span>
                     </div>
                   </div>
                   <button
