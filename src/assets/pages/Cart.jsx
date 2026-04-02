@@ -213,10 +213,10 @@ export default function Cart() {
           formDialog.current.close();
           setRefresh((prev) => prev + 1);
         }
-        // if (paymentMethod === "online") {
-        //   console.log(url);
-        //   window.location.href = url;
-        // }
+        if (paymentMethod === "online") {
+          console.log(url);
+          window.location.href = url;
+        }
       })
       .catch(async (err) => {
         formDialog.current.close();
