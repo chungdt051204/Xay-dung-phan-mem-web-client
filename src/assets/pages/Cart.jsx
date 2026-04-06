@@ -62,7 +62,8 @@ export default function Cart() {
 
   useEffect(() => {
     setSelectedItems(
-      myCart?.items.filter((value) => itemIdsSelected.includes(value._id)) || []
+      myCart?.items.filter((value) => itemIdsSelected.includes(value._id)) ||
+        [],
     );
   }, [itemIdsSelected, myCart]);
 
@@ -109,7 +110,7 @@ export default function Cart() {
     // Kiểm tra số lượng tồn kho
     if (item.quantity >= item.productId.quantityStock) {
       toast.warning(
-        `Sản phẩm "${item.productId.productName}" chỉ còn ${item.productId.quantityStock} cái`
+        `Sản phẩm "${item.productId.productName}" chỉ còn ${item.productId.quantityStock} cái`,
       );
       return;
     }
