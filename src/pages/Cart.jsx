@@ -1,13 +1,13 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useNavigate } from "react-router-dom";
 import { useState, useContext, useEffect, useRef } from "react";
 import AppContext from "../components/AppContext";
-import React from "react";
 import Navbar from "../components/UserNavbar";
 import Footer from "../components/Footer";
-import "../style/Cart.css";
 import fetchApi from "../service/api";
 import { api } from "../App";
 import { toast } from "react-toastify";
+import "../style/Cart.css";
 import "../style/PaymentDialog.css";
 
 export default function Cart() {
@@ -32,12 +32,13 @@ export default function Cart() {
       });
     return sum;
   };
+
   const totalAmountSelectedItems = () => {
     let sum = 0;
     selectedItems?.forEach((value) => {
       sum = sum + value.productId.price * value.quantity;
     });
-    return sum + " " + "VNĐ";
+    return sum;
   };
 
   useEffect(() => {
@@ -74,87 +75,54 @@ export default function Cart() {
       setItemIdsSelected(newItemIds);
     }
   };
+
   const handleSelectedAll = () => {
     if (itemIdsSelected.length === 0) {
-      myCart?.items?.map((value) => {
-        setItemIdsSelected((prev) => [...prev, value._id]);
-      });
+      const allIds = myCart?.items?.map((value) => value._id);
+      setItemIdsSelected(allIds || []);
     } else setItemIdsSelected([]);
   };
+
   const handleDecreaseQuantity = (item) => {
     if (item.quantity > 1) {
-      fetch(`${api}/cart?userId=${me?._id}&action=decrease`, {
+      fetch(`${api}/cart/${item._id}?action=decrease`, {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ itemId: item._id }),
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       })
-        .then((res) => {
-          if (res.ok) return res.json();
-          throw res;
-        })
-        .then(({ message }) => {
-          console.log(message);
-          setRefresh((prev) => prev + 1);
-        })
-        .catch(async (err) => {
-          const { message } = await err.json();
-          console.log(message);
-        });
+        .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+        .then(() => setRefresh((prev) => prev + 1))
+        .catch(() => {});
     }
   };
+
   const handleIncreaseQuantity = (item) => {
-    // Kiểm tra số lượng tồn kho
     if (item.quantity >= item.productId.quantityStock) {
       toast.warning(
         `Sản phẩm "${item.productId.productName}" chỉ còn ${item.productId.quantityStock} cái`
       );
       return;
     }
-
-    fetch(`${api}/cart?userId=${me?._id}&action=increase`, {
+    fetch(`${api}/cart/${item._id}?action=increase`, {
       method: "PUT",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ itemId: item._id }),
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw res;
-      })
-      .then(({ message }) => {
-        console.log(message);
-        setRefresh((prev) => prev + 1);
-      })
-      .catch(async (err) => {
-        const { message } = await err.json();
-        console.log(message);
-      });
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then(() => setRefresh((prev) => prev + 1))
+      .catch(() => {});
   };
+
   const handleDelete = (id) => {
-    fetch(`${api}/cart?itemId=${id}`, {
+    fetch(`${api}/cart/${id}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw res;
-      })
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then(({ message }) => {
         toast.success(message);
         setRefresh((prev) => prev + 1);
-      })
-      .catch(async (err) => {
-        const { message } = await err.json();
-        console.log(message);
       });
   };
+
   const handleDeleteAll = () => {
     if (itemIdsSelected.length > 0) {
       fetch(`${api}/cart`, {
@@ -165,20 +133,14 @@ export default function Cart() {
         },
         body: JSON.stringify({ itemIds: itemIdsSelected }),
       })
-        .then((res) => {
-          if (res.ok) return res.json();
-          throw res;
-        })
+        .then((res) => (res.ok ? res.json() : Promise.reject(res)))
         .then(({ message }) => {
           toast.success(message);
           setRefresh((prev) => prev + 1);
-        })
-        .catch(async (err) => {
-          const { message } = await err.json();
-          console.log(message);
         });
     }
   };
+
   const handleOpenDialog = () => {
     if (itemIdsSelected.length === 0) {
       toast.warning("Vui lòng chọn sản phẩm để xác nhận thanh toán");
@@ -186,8 +148,12 @@ export default function Cart() {
     }
     formDialog.current.showModal();
   };
+
+  // 2. Hàm xử lý đặt hàng tối ưu hóa luồng redirect
   const handleConfirmOrder = (e) => {
     e.preventDefault();
+    const loadId = toast.loading("Đang khởi tạo đơn hàng...");
+
     fetch(`${api}/order`, {
       method: "POST",
       headers: {
@@ -195,68 +161,66 @@ export default function Cart() {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify({
-        fullname: fullname,
-        address: address,
-        phone: phone,
-        paymentMethod: paymentMethod,
+        fullname,
+        address,
+        phone,
+        paymentMethod,
         total: totalAmount(),
         items: selectedItems,
       }),
     })
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw res;
-      })
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then(({ message, url }) => {
+        toast.dismiss(loadId);
         if (paymentMethod === "cod") {
           toast.success(message);
           formDialog.current.close();
           setRefresh((prev) => prev + 1);
         }
-        if (paymentMethod === "online") {
-          console.log(url);
-          window.location.href = url;
+        // 3. Đối với thanh toán online: Thông báo rõ ràng trước khi chuyển hướng
+        if (paymentMethod === "online" && url) {
+          toast.info("Đang chuyển hướng đến cổng thanh toán an toàn...");
+          // Trì hoãn một chút để trình duyệt không coi đây là hành động pop-up độc hại
+          setTimeout(() => {
+            window.location.href = url;
+          }, 1000);
         }
       })
       .catch(async (err) => {
+        toast.dismiss(loadId);
         formDialog.current.close();
-        if (err.status === 404 || err.status === 400) {
-          const { message } = await err.json();
-          toast.error(message);
-        }
-        console.log("Lỗi hệ thống");
+        const errJson = await err.json().catch(() => ({}));
+        toast.error(errJson.message || "Lỗi hệ thống");
       });
   };
+
   return (
     <>
       <Navbar />
-
       <div className="cart-page">
-        <header className="cart-header">
+        <div className="cart-header">
           <button className="back-btn" onClick={() => navigate(-1)}>
             <i className="fa-solid fa-arrow-left"></i>
           </button>
           <h1>Giỏ hàng của bạn</h1>
-        </header>
-
+        </div>
         <div className="cart-content">
           <ul className="cart-items">
             {myCart?.items.length > 0 ? (
               myCart?.items.map((item) => (
-                <li key={item._id} className="cart-item">
+                <li key={item._id} className="item">
                   <input
                     checked={itemIdsSelected.includes(item._id)}
                     onChange={() => handleItemSelected(item._id)}
                     type="checkbox"
                   />
-                  <img src={item.productId.image} />
+                  <img src={item.productId.image} alt="product" />
                   <div className="item-info">
                     <p className="item-name">{item.productId.productName}</p>
                     <p className="item-price">
                       {item.productId.price.toLocaleString()}đ
                     </p>
-                    <p className="item-desc">{item.productId.description}</p>
-                    <p className="item-tech">{item.productId.techSpecs}</p>
+                    <p className="item-des">{item.productId.description}</p>
                     <div className="quantity-control">
                       <button onClick={() => handleDecreaseQuantity(item)}>
                         -
@@ -297,15 +261,14 @@ export default function Cart() {
                     }
                     onChange={handleSelectedAll}
                     type="checkbox"
-                  />
+                  />{" "}
                   Chọn tất cả
                 </div>
                 <button onClick={handleDeleteAll} className="checkout-btn">
                   Xóa
                 </button>
               </div>
-
-              <h4>Tổng tiền: {totalAmount() + " " + "VNĐ"} </h4>
+              <h4>Tổng tiền: {totalAmount().toLocaleString()} VNĐ</h4>
               <button onClick={handleOpenDialog} className="checkout-btn">
                 Thanh toán
               </button>
@@ -317,8 +280,7 @@ export default function Cart() {
       <dialog ref={formDialog} className="payment-dialog">
         <div className="dialog-header">
           <div className="dialog-header-text">
-            <span className="dialog-header-sub">Xác nhận đơn hàng</span>
-            <h2>Thanh toán</h2>
+            <h2>Xác nhận thanh toán</h2>
           </div>
           <button
             type="button"
@@ -328,7 +290,6 @@ export default function Cart() {
             ✕
           </button>
         </div>
-
         <form
           className="payment-form"
           method="dialog"
@@ -352,19 +313,13 @@ export default function Cart() {
                       <tr key={value._id}>
                         <td>
                           <div className="product-cell">
-                            <img
-                              src={value.productId.image}
-                              alt={value.productId.productName}
-                            />
+                            <img src={value.productId.image} alt="product" />
                             <div>
                               <p className="product-name">
                                 {value.productId.productName}
                               </p>
                               <p className="product-desc">
                                 {value.productId.description}
-                              </p>
-                              <p className="product-desc">
-                                {value.productId.techSpecs}
                               </p>
                             </div>
                           </div>
@@ -385,52 +340,45 @@ export default function Cart() {
                 </table>
               </div>
             </div>
-
             <div className="form-section">
               <div className="form-section-title">Thông tin giao hàng</div>
-
               <div className="form-group">
-                <label htmlFor="fullname">
+                <label>
                   Họ và tên <span className="required">*</span>
                 </label>
                 <input
                   value={fullname}
-                  id="fullname"
                   type="text"
                   onChange={(e) => setFullname(e.target.value)}
-                  placeholder="Vui lòng nhập họ tên"
+                  placeholder="Nhập họ tên"
                   required
+                  autoComplete="off"
                 />
               </div>
-
               <div className="form-group">
-                <label htmlFor="address">
+                <label>
                   Địa chỉ giao hàng <span className="required">*</span>
                 </label>
                 <input
                   value={address}
-                  id="address"
                   type="text"
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Vui lòng nhập địa chỉ"
+                  placeholder="Nhập địa chỉ"
                   required
                 />
               </div>
-
               <div className="form-group">
-                <label htmlFor="phone">
+                <label>
                   Số điện thoại <span className="required">*</span>
                 </label>
                 <input
                   value={phone}
-                  id="phone"
                   type="tel"
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Vui lòng nhập số điện thoại"
+                  placeholder="Nhập số điện thoại"
                   required
                 />
               </div>
-
               <div className="form-group">
                 <label>
                   Phương thức thanh toán <span className="required">*</span>
@@ -441,42 +389,35 @@ export default function Cart() {
                       type="radio"
                       name="paymentMethod"
                       value="cod"
-                      defaultChecked
+                      checked={paymentMethod === "cod"}
                       onChange={(e) => setPaymentMethod(e.target.value)}
                     />
-                    <span className="radio-icon">🚚</span>
-                    <span>Thanh toán khi nhận hàng</span>
+                    <span className="radio-icon">🚚</span>{" "}
+                    <span>Khi nhận hàng</span>
                   </label>
                   <label className="radio-label">
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="online"
+                      checked={paymentMethod === "online"}
                       onChange={(e) => setPaymentMethod(e.target.value)}
                     />
-                    <span className="radio-icon">💳</span>
-                    <span>Thanh toán trực tuyến</span>
+                    <span className="radio-icon">💳</span>{" "}
+                    <span>Trực tuyến (MoMo)</span>
                   </label>
                 </div>
               </div>
             </div>
-
             <div className="order-summary">
-              <div className="summary-row">
-                <span>Tạm tính ({selectedItems.length} sản phẩm)</span>
-                <span className="amount">{totalAmountSelectedItems()}</span>
-              </div>
-              {/* <div className="summary-row">
-                <span>Phí vận chuyển</span>
-                <span className="free-ship">Miễn phí</span>
-              </div> */}
               <div className="summary-row total">
                 <span>Tổng thanh toán</span>
-                <span className="amount">{totalAmountSelectedItems()}</span>
+                <span className="amount">
+                  {totalAmountSelectedItems().toLocaleString()}₫
+                </span>
               </div>
             </div>
           </div>
-
           <div className="dialog-actions">
             <div className="action-btns">
               <button
@@ -487,7 +428,7 @@ export default function Cart() {
                 Hủy
               </button>
               <button type="submit" className="submit-btn">
-                Đặt hàng ngay →
+                Xác nhận đặt hàng →
               </button>
             </div>
           </div>
